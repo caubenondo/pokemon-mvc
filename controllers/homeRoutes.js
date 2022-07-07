@@ -1,78 +1,85 @@
-const { Post, User } = require('../models');
-const Comment = require('../models/Comment')
-const withAuth = require('../utils/auth');
-const router = require('express').Router();
+const { Post, User } = require("../models");
+const Comment = require("../models/Comment");
+const Pokedex = require("../models/Pokedex");
+const withAuth = require("../utils/auth");
+const router = require("express").Router();
 
-router.get('/', async (req,res)=>{
+
+
+
+router.get("/", async (req, res) => {
     try {
         // JOIN TABLES
         const postData = await Post.findAll({
-            include:[
+            include: [
                 {
-                    model:User,
-                    attributes:['username']
-                },{
+                    model: User,
+                    attributes: ["username"],
+                },
+                {
                     model: Comment,
-                    include: {model:User,attributes:['username']},
-                    attributes:['description','date_created','id']
-                }
+                    include: { model: User, attributes: ["username"] },
+                    attributes: ["description", "date_created", "id"],
+                },
             ],
-            order:[['date_created','DESC']]
-        })
-        const posts = postData.map((post)=> post.get({plain:true}));
+            order: [["date_created", "DESC"]],
+        });
+        const posts = postData.map((post) => post.get({ plain: true }));
 
         // render posts as well as current logged in user
-        res.render('homepage',{
-            posts,      
+        res.render("homepage", {
+            posts,
             logged_in: req.session.logged_in,
             user_id: req.session.user_id,
-            currentUser: req.session.currentUser          
-        })
-
+            currentUser: req.session.currentUser,
+        });
     } catch (error) {
         res.status(500).json(error);
     }
-})
+});
 
 // if the user logged in, go to homepage
-router.get('/login',(req,res)=>{
-    
-    if(req.session.logged_in){
-        res.redirect('/')
-    }else{
-        res.render('login')
+router.get("/login", (req, res) => {
+    if (req.session.logged_in) {
+        res.redirect("/");
+    } else {
+        res.render("login");
     }
-    
-})
+});
 
 // Handle dashboard view
-router.get('/dashboard', withAuth , async (req,res)=>{
+router.get("/dashboard", withAuth, async (req, res) => {
     try {
-        const userData = await User.findByPk(req.session.user_id,{
-            include:[{model:Post}],
-            attributes: {exclude:['password']},
-            order:[[{model:Post},'date_created','DESC']]
-        })
+        const userData = await User.findByPk(req.session.user_id, {
+            include: [{ model: Post }],
+            attributes: { exclude: ["password"] },
+            order: [[{ model: Post }, "date_created", "DESC"]],
+        });
 
-        const user = userData.get({plain:true})
-        res.render('dashboard',{
+        const user = userData.get({ plain: true });
+        res.render("dashboard", {
             ...user,
-            logged_in:req.session.logged_in,
-            currentUser: req.session.currentUser
-        })
+            logged_in: req.session.logged_in,
+            currentUser: req.session.currentUser,
+        });
     } catch (error) {
-        res.status(400).json(error)
+        res.status(400).json(error);
     }
-})
+});
 
-router.get('/pokedex',async (req,res)=>{
+router.get("/pokedex", async (req, res) => {
     try {
-        
+        const pokecards = [1,2,3];
+        const datastr = JSON.stringify([{"hai":"an","A":1,b:2,c:3}]);
+       
+        const pokeData = await Pokedex.findAll();
+        const pokedex = pokeData.map(p => p.get({plain:true}))
 
-        res.render('pokedex')
+        
+        res.render('pokedex',{pokecards, pokedex,datastr})
     } catch (error) {
-        res.status(500).json(error)
+        res.status(500).json(error);
     }
-})
+});
 
 module.exports = router;
