@@ -1,30 +1,39 @@
-const { Post, User } = require("../models");
+const {
+    Post,
+    User
+} = require("../models");
 const Comment = require("../models/Comment");
 const Pokedex = require("../models/Pokedex");
 const withAuth = require("../utils/auth");
 const router = require("express").Router();
 
-
+const {Op} = require('sequelize')
 
 
 router.get("/", async (req, res) => {
     try {
         // JOIN TABLES
         const postData = await Post.findAll({
-            include: [
-                {
+            include: [{
                     model: User,
                     attributes: ["username"],
                 },
                 {
                     model: Comment,
-                    include: { model: User, attributes: ["username"] },
+                    include: {
+                        model: User,
+                        attributes: ["username"]
+                    },
                     attributes: ["description", "date_created", "id"],
                 },
             ],
-            order: [["date_created", "DESC"]],
+            order: [
+                ["date_created", "DESC"]
+            ],
         });
-        const posts = postData.map((post) => post.get({ plain: true }));
+        const posts = postData.map((post) => post.get({
+            plain: true
+        }));
 
         // render posts as well as current logged in user
         res.render("homepage", {
@@ -51,12 +60,22 @@ router.get("/login", (req, res) => {
 router.get("/dashboard", withAuth, async (req, res) => {
     try {
         const userData = await User.findByPk(req.session.user_id, {
-            include: [{ model: Post }],
-            attributes: { exclude: ["password"] },
-            order: [[{ model: Post }, "date_created", "DESC"]],
+            include: [{
+                model: Post
+            }],
+            attributes: {
+                exclude: ["password"]
+            },
+            order: [
+                [{
+                    model: Post
+                }, "date_created", "DESC"]
+            ],
         });
 
-        const user = userData.get({ plain: true });
+        const user = userData.get({
+            plain: true
+        });
         res.render("dashboard", {
             ...user,
             logged_in: req.session.logged_in,
@@ -69,17 +88,102 @@ router.get("/dashboard", withAuth, async (req, res) => {
 
 router.get("/pokedex", async (req, res) => {
     try {
-        const pokecards = [1,2,3];
-        const datastr = JSON.stringify([{"hai":"an","A":1,b:2,c:3}]);
-       
+    
         const pokeData = await Pokedex.findAll();
-        const pokedex = pokeData.map(p => p.get({plain:true}))
+        const pokedex = pokeData.map((p) => {
+            const pokemon = p.get({
+                plain: true
+            })
+            // const moves_arr = JSON.parse(pokemon.moves).map((move)=>{
+            //     const oneRow = move.split('**')
+            //     return {name:oneRow[0],lv:oneRow[1],from:oneRow[2]}
+            // })
+            const newPokemon = {
+                ...pokemon,
+                abilities: JSON.parse(pokemon.abilities),
+                types: JSON.parse(pokemon.types),
+                // moves:moves_arr
+            }
+            return newPokemon
+        })
 
-        
-        res.render('pokedex',{pokecards, pokedex,datastr})
+        // res.status(200).json(pokedex)
+        res.render('pokedex', {
+            pokedex
+        })
     } catch (error) {
         res.status(500).json(error);
     }
 });
+
+router.get('/pokeown', async (req, res) => {
+    try {
+        const own = [2, 5, 6];
+            const pokeData = await Pokedex.findAll({
+               where:{
+                api_id:{
+                    [Op.in]:own
+                }
+               }
+            });
+            const pokedex = pokeData.map((p) => {
+                const pokemon = p.get({
+                    plain: true
+                })
+                // const moves_arr = JSON.parse(pokemon.moves).map((move)=>{
+                //     const oneRow = move.split('**')
+                //     return {name:oneRow[0],lv:oneRow[1],from:oneRow[2]}
+                // })
+                const newPokemon = {
+                    ...pokemon,
+                    abilities: JSON.parse(pokemon.abilities),
+                    types: JSON.parse(pokemon.types),
+                    // moves:moves_arr
+                }
+                return newPokemon
+            })
+    
+            // res.status(200).json(pokedex)
+            res.render('pokeown', {
+                pokedex
+            })
+    } catch (error) {
+        res.status(500), json(error)
+    }
+})
+
+router.get('/pokedetail/:query',async (req,res)=>{
+    try {
+        const pokedex = await Pokedex.findOne({
+            where: {
+                [Op.or]: [
+                  { name: req.params.query },
+                  { id: req.params.query }
+                ]
+              }
+        })
+        const pokemon = pokedex.get({plain:true})
+        const moves_arr = JSON.parse(pokemon.moves).map((move)=>{
+            const oneRow = move.split('**')
+            return {name:oneRow[0],lv:oneRow[1],from:oneRow[2]}
+        })
+        const newPokemon = {...pokemon,
+            moves_arr,
+            abilities:JSON.parse(pokemon.abilities),
+            types:JSON.parse(pokemon.types),
+            moves:moves_arr
+        }
+
+      
+        if(!newPokemon){
+            res.status(404).json('No pokemon associate with this id')
+        }
+        // res.status(200).json(newPokemon)
+
+        res.render('pokedetail', newPokemon)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+})
 
 module.exports = router;

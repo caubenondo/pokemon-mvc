@@ -1,60 +1,61 @@
-<div id="card" style="background: radial-gradient(circle at 50% 0%, {{first_theme this.types}} 36%, rgb(255, 255, 255) 36%);">
+
+
+<div id="card" style="background: radial-gradient(circle at 50% 0%, {{one_theme this.types.[0]}} 36%, rgb(255, 255, 255) 36%);">
     <p class="hp">
         <span>ID</span>
         {{this.id}}
     </p>
-    <img src="./images/pokemons/{{this.api_id}}.svg">
+    <img class='animate__animated animate__infinite animate__slower animate__pulse' src="/images/pokemons/{{this.api_id}}.svg">
     <h2 class="poke-name">{{cap this.name}}</h2>
     <div class="types">
-        {{#each (parse this.types)}} 
-            <span style="background-color:{{one_theme this}};">{{this}}</span>
-        
+        {{#each this.types}}
+            <span style="background-color:{{one_theme this}};">{{cap this}}</span>
         {{/each}}
     </div>
     <div class="stats">
         <div>
-            <h3>{{this.stat_hp}}</h3>
-            <p>Health</p>
+            <h3>{{this.stat_hp}} <i class="fa-solid fa-heart"></i></h3>
+            <p>HP</p>
         </div>
         <div>
-            <h3>{{this.stat_att}}</h3>
-            <p>Attack</p>
+            <h3>{{this.stat_att}} <i class="fa-solid fa-location-crosshairs"></i></h3>
+            <p>ATT</p>
         </div>
         <div>
-            <h3>{{this.stat_def}}</h3>
-            <p>Defense</p>
+            <h3>{{this.stat_def}} <i class="fa-solid fa-shield"></i></h3>
+            <p>DEF</p>
         </div>
         
     </div>
     <div class="stats">
         <div>
-            <h3>{{this.stat_speed}}</h3>
-            <p>Speed</p>
+            <h3>{{this.stat_speed}} <i class="fa-solid fa-wind"></i></h3>
+            <p>SPD</p>
         </div>
          <div>
-            <h3>{{this.stat_special_att}}</h3>
-            <p>Sp. Attack</p>
+            <h3>{{this.stat_special_att}} <i class="fa-solid fa-skull-crossbones"></i></h3>
+            <p>Sp. ATT</p>
         </div>
          <div>
-            <h3>{{this.stat_special_def}}</h3>
-            <p>Sp. Deffense</p>
+            <h3>{{this.stat_special_def}} <i class="fa-solid fa-shield-virus"></i></h3>
+            <p>Sp. DEF</p>
         </div>
     </div>
     <div class="abilities">
         <p> <span class="h6">Abilities: </span>
-            {{#each (parse this.abilities)}}
-        <span class="pill">
-            • {{cap this}}
+            {{#each this.abilities as |abi|}}
+                <span class="pill">
+                    • {{cap abi}}
         </span>
         {{/each}}
         </p>
         
     </div>
+   
+   
 </div>
 
 
 <script>
-  
 
-    
 </script>
